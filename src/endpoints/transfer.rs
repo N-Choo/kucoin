@@ -1,8 +1,8 @@
 use crate::{
     client::rest::KuCoinClient,
     types::{
-        transfer::{AccountType, TransferData, TransferRequest, TransferType},
         KuCoinResponse,
+        transfer::{AccountType, TransferData, TransferRequest, TransferType},
     },
     utils::errors::{KucoinErrors, KucoinResults},
 };
