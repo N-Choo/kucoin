@@ -141,6 +141,23 @@ async fn open_orders(client: &KuCoinClient) {
 
 ---
 
+### Get Order By Id
+
+```rust
+async fn get_order(client: &KuCoinClient, order_id: &str) {
+    let res = client.spot().get_order(order_id, "BTC-USDT").await.unwrap();
+
+    if let Some(order) = res.data {
+        println!(
+            "active: {} (in order book: {})",
+            order.active, order.in_order_book
+        );
+    }
+}
+```
+
+---
+
 ## Deposits
 
 ```rust
@@ -212,4 +229,3 @@ Project: https://coinbot.locker
 <div align="center">
 <sub>Built with precision in Rust 🦀 Contributions are welcome </sub>
 </div>
-

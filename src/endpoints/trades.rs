@@ -210,6 +210,22 @@ impl<'a> SpotHandler<'a> {
         Ok(res)
     }
 
+    /// Get a single order's information by its order id.
+    ///
+    /// Canceled or fully filled orders are marked as `active = false`.
+    pub async fn get_order(
+        &self,
+        order_id: &str,
+        symbol: &str,
+    ) -> KucoinResults<KuCoinResponse<SpotDatum>> {
+        let endpoint = format!("/api/v1/hf/orders/{}?symbol={}", order_id, symbol);
+        let res = self
+            .client
+            .send::<KuCoinResponse<SpotDatum>>("GET", "", &endpoint)
+            .await?;
+        Ok(res)
+    }
+
     pub async fn close_all(&self) -> KucoinResults<KuCoinResponse<CancelAllRes>> {
         let endpoint = format!("/api/v1/hf/orders/cancelAll");
         let res = self
