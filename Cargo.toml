@@ -1,6 +1,6 @@
 [package]
 name = "kucoin"
-version = "0.7.3"
+version = "0.7.5"
 edition = "2024"
 description = "A robust and asynchronous Rust client for the KuCoin exchange API."
 license = "MIT"
