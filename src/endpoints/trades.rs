@@ -5,8 +5,9 @@ use crate::{
     types::{
         KuCoinResponse,
         spot::{
-            BatchOrderResult, BatchSpotContract, CancelAllRes, Side, SpotCancelRequest,
-            SpotCanceledData, SpotData, SpotDatum, SpotOrderRequest, Stp, TimeInForce, TradeType,
+            BatchOrderResult, BatchSpotContract, CancelAllRes, OcoOrderData, OcoOrderRequest, Side,
+            SpotCancelRequest, SpotCanceledData, SpotData, SpotDatum, SpotOrderRequest, Stp,
+            TimeInForce, TradeType,
         },
     },
     utils::errors::KucoinResults,
@@ -123,6 +124,62 @@ impl SpotOrderRequest {
     }
 }
 
+impl OcoOrderRequest {
+    /// Create an OCO request for `symbol` on `side`.
+    ///
+    /// `client_oid` defaults to a fresh UUID and `trade_type` to `"TRADE"` (spot).
+    /// Set the prices and size with the `set_*` methods before placing.
+    pub fn new(symbol: &str, side: Side) -> Self {
+        OcoOrderRequest {
+            symbol: symbol.to_string(),
+            side,
+            price: String::new(),
+            size: String::new(),
+            client_oid: Uuid::new_v4().to_string(),
+            stop_price: String::new(),
+            limit_price: String::new(),
+            remark: None,
+            trade_type: Some("TRADE".to_string()),
+        }
+    }
+
+    /// Sets the take-profit limit price.
+    pub fn set_price(mut self, price: f64) -> Self {
+        self.price = price.to_string();
+        self
+    }
+
+    /// Sets the order quantity (base asset).
+    pub fn set_size(mut self, size: f64) -> Self {
+        self.size = size.to_string();
+        self
+    }
+
+    /// Sets the stop-loss trigger price.
+    pub fn set_stop_price(mut self, stop_price: f64) -> Self {
+        self.stop_price = stop_price.to_string();
+        self
+    }
+
+    /// Sets the stop-loss limit price.
+    pub fn set_limit_price(mut self, limit_price: f64) -> Self {
+        self.limit_price = limit_price.to_string();
+        self
+    }
+
+    /// Overrides the auto-generated client order id.
+    pub fn set_client_oid(mut self, client_oid: &str) -> Self {
+        self.client_oid = client_oid.to_string();
+        self
+    }
+
+    /// Sets order remarks (no longer than 20 ASCII characters).
+    pub fn set_remark(mut self, remark: &str) -> Self {
+        self.remark = Some(remark.to_string());
+        self
+    }
+}
+
 impl BatchSpotContract {
     pub fn new() -> Self {
         BatchSpotContract {
@@ -159,6 +216,24 @@ impl<'a> SpotHandler<'a> {
         let res = self
             .client
             .send::<KuCoinResponse<SpotData>>("POST", &body, endpoint)
+            .await?;
+        Ok(res)
+    }
+
+    /// Place a Spot OCO (take-profit limit + stop-loss) order.
+    ///
+    /// One request spans both legs; when one fills or is cancelled the other is
+    /// cancelled automatically.
+    pub async fn place_oco_order(
+        &self,
+        order: OcoOrderRequest,
+    ) -> KucoinResults<KuCoinResponse<OcoOrderData>> {
+        let endpoint = "/api/v3/oco/order";
+        let body = serde_json::to_string(&order)?;
+
+        let res = self
+            .client
+            .send::<KuCoinResponse<OcoOrderData>>("POST", &body, endpoint)
             .await?;
         Ok(res)
     }
@@ -316,5 +391,27 @@ mod test {
             Ok(res) => println!("Spot Canceled res: {:#?}", res),
             Err(e) => println!("Spot Canceled Err: {:?}", e),
         }
+    }
+
+    #[test]
+    fn serializes_oco_request_as_camel_case() {
+        let req = OcoOrderRequest::new("SOL-USDT", Side::Sell)
+            .set_price(130.0)
+            .set_size(0.072)
+            .set_stop_price(100.0)
+            .set_limit_price(99.5)
+            .set_client_oid("abc-123")
+            .set_remark("tp/sl");
+
+        let json = serde_json::to_string(&req).unwrap();
+        assert!(json.contains("\"symbol\":\"SOL-USDT\""));
+        assert!(json.contains("\"side\":\"sell\""));
+        assert!(json.contains("\"price\":\"130\""));
+        assert!(json.contains("\"size\":\"0.072\""));
+        assert!(json.contains("\"clientOid\":\"abc-123\""));
+        assert!(json.contains("\"stopPrice\":\"100\""));
+        assert!(json.contains("\"limitPrice\":\"99.5\""));
+        assert!(json.contains("\"tradeType\":\"TRADE\""));
+        assert!(json.contains("\"remark\":\"tp/sl\""));
     }
 }

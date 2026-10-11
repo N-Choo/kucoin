@@ -23,6 +23,7 @@ Optimizing for high-frequency trading, automated bots, and enterprise sub-accoun
   - Batch orders
   - Order cancellation
   - Retrieve open orders
+  - OCO orders (take-profit + stop-loss)
 
 - **Wallet & deposits**
   - Deposit history with filters
@@ -155,6 +156,35 @@ async fn get_order(client: &KuCoinClient, order_id: &str) {
     }
 }
 ```
+
+---
+
+### OCO Orders (Take-Profit + Stop-Loss)
+
+Place a single one-cancels-other order pairing a take-profit limit with a
+stop-loss; when one leg fills or is cancelled, the other is cancelled too.
+
+```rust
+use kucoin::types::spot::{OcoOrderRequest, Side};
+
+async fn place_oco(client: &KuCoinClient, qty: f64) {
+    let oco = OcoOrderRequest::new("SOL-USDT", Side::Sell)
+        .set_price(130.0)       // take-profit limit price
+        .set_size(qty)          // base quantity (your filled position)
+        .set_stop_price(100.0)  // stop-loss trigger price
+        .set_limit_price(99.5)  // stop-loss limit price
+        .set_remark("tp-sl");
+
+    let res = client.spot().place_oco_order(oco).await.unwrap();
+    if let Some(data) = res.data {
+        println!("OCO order id: {}", data.order_id);
+    }
+}
+```
+
+`OcoOrderRequest::new` auto-generates a `client_oid` (UUID) and defaults
+`trade_type` to `"TRADE"` (spot). Set an explicit id with
+`.set_client_oid("...")` when you want idempotency across retries.
 
 ---
 

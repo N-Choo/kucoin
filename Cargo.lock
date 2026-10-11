@@ -1721,7 +1721,7 @@ dependencies = [
 
 [[package]]
 name = "kucoin"
-version = "0.7.5"
+version = "0.7.6"
 dependencies = [
  "base64 0.22.1",
  "ethers",
