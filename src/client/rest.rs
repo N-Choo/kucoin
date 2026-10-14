@@ -4,8 +4,9 @@ use std::str::FromStr;
 
 use crate::{
     endpoints::{
-        deposit::DepositHandler, sub_account::SubAccHander, trades::SpotHandler,
-        transfer::TransferHandler, withdrawals::WithdrawHandler,
+        deposit::DepositHandler, margin::MarginHandler, market::MarketHandler,
+        sub_account::SubAccHander, trades::SpotHandler, transfer::TransferHandler,
+        withdrawals::WithdrawHandler,
     },
     utils::{
         auth::{encrypt_pass, encrypt_prehash},
@@ -150,23 +151,31 @@ impl KuCoinClient {
 
     // --- Modular Accessors ---
 
-    pub fn deposit(&self) -> DepositHandler {
+    pub fn deposit(&self) -> DepositHandler<'_> {
         DepositHandler { client: self }
     }
 
-    pub fn spot(&self) -> SpotHandler {
+    pub fn spot(&self) -> SpotHandler<'_> {
         SpotHandler { client: self }
     }
 
-    pub fn transfer(&self) -> TransferHandler {
+    pub fn margin(&self) -> MarginHandler<'_> {
+        MarginHandler { client: self }
+    }
+
+    pub fn market(&self) -> MarketHandler<'_> {
+        MarketHandler { client: self }
+    }
+
+    pub fn transfer(&self) -> TransferHandler<'_> {
         TransferHandler { client: self }
     }
 
-    pub fn sub_acc(&self) -> SubAccHander {
+    pub fn sub_acc(&self) -> SubAccHander<'_> {
         SubAccHander { client: self }
     }
 
-    pub fn withdraw(&self) -> WithdrawHandler {
+    pub fn withdraw(&self) -> WithdrawHandler<'_> {
         WithdrawHandler { client: self }
     }
 }

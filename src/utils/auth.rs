@@ -1,4 +1,4 @@
-use base64::{engine::general_purpose::STANDARD, Engine};
+use base64::{Engine, engine::general_purpose::STANDARD};
 use ethers::core::k256::sha2::Sha256;
 use hmac::{self, Hmac, Mac};
 

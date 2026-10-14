@@ -1,8 +1,8 @@
 use crate::{
     client::rest::KuCoinClient,
     types::{
-        deposit::{Deposit, DepositHistoryRequest, DepositList, DepositStatus},
         KuCoinResponse,
+        deposit::{Deposit, DepositHistoryRequest, DepositList, DepositStatus},
     },
 };
 

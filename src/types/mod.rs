@@ -1,4 +1,6 @@
 pub mod deposit;
+pub mod margin;
+pub mod market;
 pub mod spot;
 pub mod sup_account;
 pub mod transfer;
